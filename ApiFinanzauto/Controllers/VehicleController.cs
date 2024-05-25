@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace ApiFinanzauto.Controllers
 {
@@ -22,26 +23,35 @@ namespace ApiFinanzauto.Controllers
 
         [HttpGet]
         // [Authorize]
-        [Route("")]
-        public async Task<ActionResult<IEnumerable<Vehicle>>> GetVehicles()
+        [Route("{id_client}/all")]
+        public async Task<ActionResult<IEnumerable<Vehicle>>> GetVehicles(int id_client)
         {
-            var vehicles = await _context.Vehicles.ToListAsync();
+            var vehicles = await _context.Vehicles.Where(v => v.ClientId == id_client).ToListAsync();
             return Ok(vehicles);
         }
 
         [HttpGet]
         // [Authorize]
-        [Route("id")]
-        public async Task<IActionResult> GetVehicle(int id)
+        [Route("{id_client}/by_id/{id_vehicle}")]
+        public async Task<IActionResult> GetVehicle(int id_client, int id_vehicle)
         {
-            var vehicle = await _context.Vehicles.FindAsync(id);
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
 
-            if (vehicle == null)
+            if (vehicle is null)
             {
                 return NotFound();
             }
 
             return Ok(vehicle);
+        }
+
+        [HttpGet]
+        [Route("test_split")]
+        public ActionResult<IEnumerable<string>> GetTestSplit()
+        {
+            string texto = "Hola,mundo,amigo";
+            string[] subcadenas = texto.Split(',');
+            return Ok(subcadenas);
         }
 
         [HttpPost]
@@ -73,10 +83,15 @@ namespace ApiFinanzauto.Controllers
 
         [HttpPut]
         // [Authorize]
-        [Route("")]
-        public async Task<IActionResult> UpdateVehicle(int id, VehicleDto vehicle)
+        [Route("{id_client}/{id_vehicle}")]
+        public async Task<IActionResult> UpdateVehicle(int id_client, int id_vehicle, VehicleDto vehicle)
         {
-            var vehicleCurrent = await _context.Vehicles.FindAsync(id);
+            var vehicleCurrent = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
+            if (vehicleCurrent is null)
+            {
+                return NotFound();
+            }
+
             vehicleCurrent!.Name = vehicle.Name;
             vehicleCurrent.Plate = vehicle.Plate;
             vehicleCurrent.Color = vehicle.Color;
@@ -85,24 +100,11 @@ namespace ApiFinanzauto.Controllers
             vehicleCurrent.Year = vehicle.Year;
             vehicleCurrent.Kilimetres = vehicle.Kilimetres;
             vehicleCurrent.Cost = vehicle.Cost;
-            vehicleCurrent.Image = vehicle.Image;
+            vehicleCurrent.Image = vehicle.Image is not null ? vehicle.Image : "";
             vehicleCurrent.ClientId = vehicle.ClientId;
             vehicleCurrent.Observations = vehicle.Observations;
             vehicleCurrent.Status = vehicle.Status;
             vehicleCurrent.UpdatedAt = DateTime.Now;
-
-            if (vehicleCurrent.Image is not null && vehicle.Image is not null)
-            {
-                if (vehicleCurrent.Image != vehicle.Image)
-                {
-                    if (System.IO.File.Exists(vehicleCurrent.Image))
-                    {
-                        System.IO.File.Delete(vehicleCurrent.Image);
-                    }
-
-                    vehicleCurrent.Image = vehicle.Image;
-                }
-            }
 
             await _context.SaveChangesAsync();
             return Ok();
@@ -110,18 +112,25 @@ namespace ApiFinanzauto.Controllers
 
         [HttpDelete]
         // [Authorize]
-        [Route("")]
-        public async Task<IActionResult> DeleteVehicle(int id)
+        [Route("{id_client}/{id_vehicle}")]
+        public async Task<IActionResult> DeleteVehicle(int id_client, int id_vehicle)
         {
-            var vehicleRemove = await _context.Vehicles.FindAsync(id);
+            var vehicleRemove = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
             if (vehicleRemove is null)
             {
                 return NotFound();
             }
 
-            if (vehicleRemove.Image is not null && System.IO.File.Exists(vehicleRemove.Image))
+            if (vehicleRemove.Image is not null)
             {
-                System.IO.File.Delete(vehicleRemove.Image);
+                string[] paths = vehicleRemove.Image.Split(',');
+                foreach (var path in paths)
+                {
+                    if (System.IO.File.Exists(path))
+                    {
+                        System.IO.File.Delete(path);
+                    }
+                }
             }
 
             _context.Vehicles.Remove(vehicleRemove);
@@ -157,6 +166,20 @@ namespace ApiFinanzauto.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpDelete]
+        // [Authorize]
+        [Route("upload/{path}")]
+        public IActionResult DeleteFile(string path)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+                return Ok();
+            }
+
+            return NotFound();
         }
     }
 }

@@ -20,24 +20,31 @@ namespace DB
         public string Name { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Plate { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Color { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Brand { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Line { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Year { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Kilimetres { get; set; }
 
         [Required]
+        [MaxLength(100, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Cost { get; set; }
 
         [DataType(DataType.MultilineText)]

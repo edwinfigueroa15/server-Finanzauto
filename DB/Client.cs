@@ -15,12 +15,16 @@ namespace DB
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        [Required]
         [MaxLength(70, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Name { get; set; } = null!;
 
-        [EmailAddress(ErrorMessage = "El correo ya existe")]
+        [Required]
+        [MaxLength(250, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Email { get; set; } = null!;
 
+        [Required]
+        [MaxLength(250, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Password { get; set; } = null!;
 
         [DefaultValue(true)]
