@@ -18,7 +18,7 @@ namespace DB
         [MaxLength(70, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
         public string Name { get; set; } = null!;
 
-        [EmailAddress]
+        [EmailAddress(ErrorMessage = "El correo ya existe")]
         public string Email { get; set; } = null!;
 
         public string Password { get; set; } = null!;
