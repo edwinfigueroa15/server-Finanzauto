@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34408.163
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiFinanzauto", "ApiFinanzauto\ApiFinanzauto.csproj", "{853D2A9D-DECD-4F9C-A0DA-51686AD55615}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB", "DB\DB.csproj", "{04875A38-A812-413B-9341-1004C4910015}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{853D2A9D-DECD-4F9C-A0DA-51686AD55615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{853D2A9D-DECD-4F9C-A0DA-51686AD55615}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{853D2A9D-DECD-4F9C-A0DA-51686AD55615}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{853D2A9D-DECD-4F9C-A0DA-51686AD55615}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04875A38-A812-413B-9341-1004C4910015}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04875A38-A812-413B-9341-1004C4910015}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04875A38-A812-413B-9341-1004C4910015}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04875A38-A812-413B-9341-1004C4910015}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A5AB3F1C-016C-4B90-97BD-A4F29DE7CCC8}
+	EndGlobalSection
+EndGlobal
