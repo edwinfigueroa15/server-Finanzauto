@@ -42,7 +42,7 @@ namespace DB
 
         [DataType(DataType.MultilineText)]
         [MaxLength(250, ErrorMessage = "El campo {0} permite máximo {1} caractéres")]
-        public string Observations { get; set; }
+        public string? Observations { get; set; }
 
         [Required]
         public string Image { get; set; }
