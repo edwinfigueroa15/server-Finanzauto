@@ -1,10 +1,7 @@
 ﻿using ApiFinanzauto.Dtos;
 using DB;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.IO;
 
 namespace ApiFinanzauto.Controllers
 {
@@ -24,10 +21,38 @@ namespace ApiFinanzauto.Controllers
         [HttpGet]
         // [Authorize]
         [Route("{id_client}/all")]
-        public async Task<ActionResult<IEnumerable<Vehicle>>> GetVehicles(int id_client)
+        public async Task<ActionResult<IEnumerable<Vehicle>>> GetVehicles(int id_client, string? search, int pageIndex, int pageSize)
         {
-            var vehicles = await _context.Vehicles.Where(v => v.ClientId == id_client).ToListAsync();
-            return Ok(vehicles);
+            List<Vehicle> vehicles = new List<Vehicle>();
+            var vehiclesLength = _context.Vehicles.Where(v => v.ClientId == id_client).Count();
+
+            if(search is not null)
+            {
+                if (pageIndex == 0 || pageSize == 0)
+                {
+                    vehicles = await _context.Vehicles.Where(v => v.Plate.Contains(search)).ToListAsync();
+                }
+                else
+                {
+                    vehicles = await _context.Vehicles.Where(v => v.ClientId == id_client && v.Plate.Contains(search)).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                }
+            }
+            else if (pageIndex == 0 || pageSize == 0)
+            {
+                vehicles = await _context.Vehicles.Where(v => v.ClientId == id_client).ToListAsync();
+            } else
+            {
+                vehicles = await _context.Vehicles.Where(v => v.ClientId == id_client).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            }
+
+            var response = new ApiResponse<object>
+            {
+                Data = vehicles,
+                Message = "Todos los vehiculos",
+                Status = "success",
+                Length = vehiclesLength
+            };
+            return Ok(response);
         }
 
         [HttpGet]
@@ -36,22 +61,22 @@ namespace ApiFinanzauto.Controllers
         public async Task<IActionResult> GetVehicle(int id_client, int id_vehicle)
         {
             var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
-
             if (vehicle is null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse<object>
+                {
+                    Data = new {},
+                    Message = "Vehiculo no encontrado",
+                    Status = "error"
+                });
             }
 
-            return Ok(vehicle);
-        }
-
-        [HttpGet]
-        [Route("test_split")]
-        public ActionResult<IEnumerable<string>> GetTestSplit()
-        {
-            string texto = "Hola,mundo,amigo";
-            string[] subcadenas = texto.Split(',');
-            return Ok(subcadenas);
+            return Ok(new ApiResponse<object>
+            {
+                Data = vehicle,
+                Message = "Vehiculo por id",
+                Status = "success"
+            });
         }
 
         [HttpPost]
@@ -59,26 +84,43 @@ namespace ApiFinanzauto.Controllers
         [Route("")]
         public async Task<IActionResult> Createvehicle(VehicleDto vehicle)
         {
-            Vehicle vehicleNew = new Vehicle();
-            vehicleNew.Name = vehicle.Name;
-            vehicleNew.Plate = vehicle.Plate;
-            vehicleNew.Color = vehicle.Color;
-            vehicleNew.Brand = vehicle.Brand;
-            vehicleNew.Line = vehicle.Line;
-            vehicleNew.Year = vehicle.Year;
-            vehicleNew.Kilimetres = vehicle.Kilimetres;
-            vehicleNew.Cost = vehicle.Cost;
-            vehicleNew.Image = vehicle.Image;
-            vehicleNew.ClientId = vehicle.ClientId;
-            vehicleNew.Status = vehicle.Status;
-            vehicleNew.Observations = vehicle.Observations;
-            vehicleNew.CreatedAt = DateTime.Now;
-            vehicleNew.UpdatedAt = DateTime.Now;
+            try
+            {
+                Vehicle vehicleNew = new Vehicle();
+                vehicleNew.Name = vehicle.Name;
+                vehicleNew.Plate = vehicle.Plate;
+                vehicleNew.Color = vehicle.Color;
+                vehicleNew.Brand = vehicle.Brand;
+                vehicleNew.Line = vehicle.Line;
+                vehicleNew.Year = vehicle.Year;
+                vehicleNew.Kilimetres = vehicle.Kilimetres;
+                vehicleNew.Cost = vehicle.Cost;
+                vehicleNew.Image = vehicle.Image;
+                vehicleNew.ClientId = vehicle.ClientId;
+                vehicleNew.Status = vehicle.Status;
+                vehicleNew.Observations = vehicle.Observations;
+                vehicleNew.CreatedAt = DateTime.Now;
+                vehicleNew.UpdatedAt = DateTime.Now;
 
-            await _context.Vehicles.AddAsync(vehicleNew);
-            await _context.SaveChangesAsync();
+                await _context.Vehicles.AddAsync(vehicleNew);
+                await _context.SaveChangesAsync();
 
-            return Ok();
+                return Ok(new ApiResponse<object>
+                {
+                    Data = vehicle,
+                    Message = "Vehiculo creado",
+                    Status = "success"
+                });
+
+            } catch (Exception)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Data = new {},
+                    Message = "Error al crear el vehiculo",
+                    Status = "error"
+                });
+            }
         }
 
         [HttpPut]
@@ -86,28 +128,50 @@ namespace ApiFinanzauto.Controllers
         [Route("{id_client}/{id_vehicle}")]
         public async Task<IActionResult> UpdateVehicle(int id_client, int id_vehicle, VehicleDto vehicle)
         {
-            var vehicleCurrent = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
-            if (vehicleCurrent is null)
+            try
             {
-                return NotFound();
+                var vehicleCurrent = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
+                if (vehicleCurrent is null)
+                {
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Data = new { },
+                        Message = "Vehiculo no encontrado",
+                        Status = "error"
+                    });
+                }
+
+                vehicleCurrent!.Name = vehicle.Name;
+                vehicleCurrent.Plate = vehicle.Plate;
+                vehicleCurrent.Color = vehicle.Color;
+                vehicleCurrent.Brand = vehicle.Brand;
+                vehicleCurrent.Line = vehicle.Line;
+                vehicleCurrent.Year = vehicle.Year;
+                vehicleCurrent.Kilimetres = vehicle.Kilimetres;
+                vehicleCurrent.Cost = vehicle.Cost;
+                vehicleCurrent.Image = vehicle.Image is not null ? vehicle.Image : "";
+                vehicleCurrent.ClientId = vehicle.ClientId;
+                vehicleCurrent.Observations = vehicle.Observations;
+                vehicleCurrent.Status = vehicle.Status;
+                vehicleCurrent.UpdatedAt = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                return Ok(new ApiResponse<object>
+                {
+                    Data = vehicle,
+                    Message = "Vehiculo por id",
+                    Status = "success"
+                });
+
+            } catch (Exception)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Data = new { },
+                    Message = "Error al actualizar el vehiculo",
+                    Status = "error"
+                });
             }
-
-            vehicleCurrent!.Name = vehicle.Name;
-            vehicleCurrent.Plate = vehicle.Plate;
-            vehicleCurrent.Color = vehicle.Color;
-            vehicleCurrent.Brand = vehicle.Brand;
-            vehicleCurrent.Line = vehicle.Line;
-            vehicleCurrent.Year = vehicle.Year;
-            vehicleCurrent.Kilimetres = vehicle.Kilimetres;
-            vehicleCurrent.Cost = vehicle.Cost;
-            vehicleCurrent.Image = vehicle.Image is not null ? vehicle.Image : "";
-            vehicleCurrent.ClientId = vehicle.ClientId;
-            vehicleCurrent.Observations = vehicle.Observations;
-            vehicleCurrent.Status = vehicle.Status;
-            vehicleCurrent.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-            return Ok();
         }
 
         [HttpDelete]
@@ -115,71 +179,49 @@ namespace ApiFinanzauto.Controllers
         [Route("{id_client}/{id_vehicle}")]
         public async Task<IActionResult> DeleteVehicle(int id_client, int id_vehicle)
         {
-            var vehicleRemove = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
-            if (vehicleRemove is null)
-            {
-                return NotFound();
-            }
-
-            if (vehicleRemove.Image is not null)
-            {
-                string[] paths = vehicleRemove.Image.Split(',');
-                foreach (var path in paths)
-                {
-                    if (System.IO.File.Exists(path))
-                    {
-                        System.IO.File.Delete(path);
-                    }
-                }
-            }
-
-            _context.Vehicles.Remove(vehicleRemove);
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
-
-        [HttpPost]
-        // [Authorize]
-        [Route("upload")]
-        public IActionResult Upload(IFormFile file)
-        {
-            var date = DateTime.Now.GetHashCode();
             try
             {
-                if (file.Length == 0) return BadRequest();
-
-                var path = Path.Combine(_webHostEnvironment.ContentRootPath, "Uploads");
-                if (!Directory.Exists(path))
+                var vehicleRemove = await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id_vehicle && v.ClientId == id_client);
+                if (vehicleRemove is null)
                 {
-                    Directory.CreateDirectory(path);
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Data = new { },
+                        Message = "Vehiculo no encontrado",
+                        Status = "error"
+                    });
                 }
 
-                string fullPath = Path.Combine(path, date + file.FileName);
-                using (var stream = new FileStream(fullPath, FileMode.Create))
+                if (vehicleRemove.Image is not null)
                 {
-                    file.CopyTo(stream);
+                    string[] paths = vehicleRemove.Image.Split(',');
+                    foreach (var path in paths)
+                    {
+                        if (System.IO.File.Exists(path))
+                        {
+                            System.IO.File.Delete(path);
+                        }
+                    }
                 }
 
-                return Ok(fullPath);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
-        }
+                _context.Vehicles.Remove(vehicleRemove);
+                await _context.SaveChangesAsync();
+                return Ok(new ApiResponse<object>
+                {
+                    Data = new { },
+                    Message = "Vehiculo eliminado",
+                    Status = "success"
+                });
 
-        [HttpDelete]
-        // [Authorize]
-        [Route("upload/{path}")]
-        public IActionResult DeleteFile(string path)
-        {
-            if (System.IO.File.Exists(path))
+            } catch (Exception)
             {
-                System.IO.File.Delete(path);
-                return Ok();
+                return BadRequest(new ApiResponse<object>
+                {
+                    Data = new { },
+                    Message = "Error al eliminar el vehiculo",
+                    Status = "error"
+                });
             }
-
-            return NotFound();
         }
     }
 }
