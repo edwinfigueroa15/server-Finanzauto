@@ -5,8 +5,8 @@ namespace DB
     public class FinanzautoDbContext : DbContext
     {
         public DbSet<Client> Clients { get; set; }
-
         public DbSet<Vehicle> Vehicles { get; set; }
+        public DbSet<Sale> Sales { get; set; }
 
         public FinanzautoDbContext(DbContextOptions<FinanzautoDbContext> options) : base(options) { }
 

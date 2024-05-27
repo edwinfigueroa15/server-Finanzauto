@@ -1,4 +1,5 @@
 ﻿using ApiFinanzauto.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiFinanzauto.Controllers
@@ -15,8 +16,8 @@ namespace ApiFinanzauto.Controllers
         }
 
         [HttpPost]
-        // [Authorize]
-        [Route("upload")]
+        [Authorize]
+        [Route("")]
         public IActionResult Upload(IFormFile file)
         {
             var date = DateTime.Now.GetHashCode();
@@ -32,7 +33,7 @@ namespace ApiFinanzauto.Controllers
                     });
                 }
 
-                var path = Path.Combine(_webHostEnvironment.ContentRootPath, "Uploads");
+                var path = Path.Combine(_webHostEnvironment.ContentRootPath, "public");
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
@@ -46,7 +47,7 @@ namespace ApiFinanzauto.Controllers
 
                 return Ok(new ApiResponse<object>
                 {
-                    Data = fullPath,
+                    Data = date + file.FileName,
                     Message = "Archivo guardado",
                     Status = "success"
                 });
@@ -63,13 +64,14 @@ namespace ApiFinanzauto.Controllers
         }
 
         [HttpDelete]
-        // [Authorize]
-        [Route("upload/{path}")]
+        [Authorize]
+        [Route("{path}")]
         public IActionResult DeleteFile(string path)
         {
-            if (System.IO.File.Exists(path))
+            var pathFile = Path.Combine(_webHostEnvironment.ContentRootPath, "public/"+path);
+            if (System.IO.File.Exists(pathFile))
             {
-                System.IO.File.Delete(path);
+                System.IO.File.Delete(pathFile);
                 return Ok(new ApiResponse<object>
                 {
                     Data = new {},

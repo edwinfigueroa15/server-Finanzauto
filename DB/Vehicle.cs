@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DB
@@ -61,8 +56,13 @@ namespace DB
         [DefaultValue(true)]
         public bool Status { get; set; } = true;
 
+        [Required]
+        public string SalesStatus { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+
+        public ICollection<Sale> Sales { get; set; }
     }
 }

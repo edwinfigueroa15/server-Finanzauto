@@ -43,7 +43,7 @@ namespace ApiFinanzauto.Controllers
                 new Claim("email", client.Email.ToString())
             };
 
-            var token = new JwtSecurityToken(_config["Jwt:Issuer"], _config["Jwt:Audience"], claims, expires: DateTime.Now.AddMinutes(60), signingCredentials: credentials);
+            var token = new JwtSecurityToken(_config["Jwt:Issuer"], _config["Jwt:Audience"], claims, expires: DateTime.Now.AddMinutes(3600), signingCredentials: credentials);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -58,13 +58,28 @@ namespace ApiFinanzauto.Controllers
                 if (VerifyPassword(login.Password, currentClient.Password))
                 {
                     var token = GenerateJwt(currentClient);
-                    return Ok(token);
+                    return Ok(new ApiResponse<object>
+                    {
+                        Data = token,
+                        Message = "Login exitoso",
+                        Status = "success"
+                    });
                 }
 
-                return NotFound("Los datos no coinciden");
+                return NotFound(new ApiResponse<object>
+                {
+                    Data = new {},
+                    Message = "Los datos no coinciden",
+                    Status = "error"
+                });
             }
 
-            return NotFound("Cliente no encontrado");
+            return NotFound(new ApiResponse<object>
+            {
+                Data = new {},
+                Message = "Cliente no encontrado",
+                Status = "error"
+            });
         }
 
         [HttpPost]
@@ -87,14 +102,29 @@ namespace ApiFinanzauto.Controllers
                 if(currentClient is not null)
                 {
                     var token = GenerateJwt(currentClient);
-                    return Ok(token);
+                    return Ok(new ApiResponse<object>
+                    {
+                        Data = token,
+                        Message = "Cliente creado",
+                        Status = "success"
+                    });
                 }
 
-                return NotFound("Error al crear el token");
+                return NotFound(new ApiResponse<object>
+                {
+                    Data = new {},
+                    Message = "Error al crear el token",
+                    Status = "error"
+                });
 
             }
 
-            return NotFound("Error al crear el cliente");
+            return NotFound(new ApiResponse<object>
+            {
+                Data = new {},
+                Message = "Error al crear el cliente",
+                Status = "error"
+            });
         }
     }
 }
